@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سيرفر الحياة الواقعية</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #1e1e1e;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #6200ea;
+      padding: 30px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.5em;
+    }
+    .description {
+      padding: 20px;
+      text-align: center;
+      font-size: 1.2em;
+    }
+    .rules, .quiz {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #2e2e2e;
+      border-radius: 10px;
+    }
+    .rules h2, .quiz h2 {
+      text-align: center;
+      color: #ffcc00;
+    }
+    .rules ul {
+      list-style: none;
+      padding: 0;
+    }
+    .rules li {
+      background: #3a3a3a;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      margin: 10px 0 5px;
+    }
+    input[type="text"], input[type="email"], select {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+    input[type="submit"] {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #ffcc00;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #111;
+      color: #aaa;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <h1>سيرفر الحياة الواقعية</h1>
+  </header>
+
+  <div class="description">
+    <p>مرحبًا بك في أفضل سيرفر حياة واقعية! تأكد من قراءة القوانين والالتزام بها.</p>
+  </div>
+
+  <section class="rules">
+    <h2>قوانين السيرفر</h2>
+    <ul>
+      <li>1. الاحترام أولاً: يجب احترام جميع اللاعبين والإداريين.</li>
+      <li>2. ممنوع RDM: القتل العشوائي بدون سبب ممنوع تمامًا.</li>
+      <li>3. ممنوع VDM: دهس اللاعبين بالسيارات بدون سبب غير مسموح.</li>
+      <li>4. التزام بـ Roleplay: لازم تتصرف داخل اللعبة كأنك تعيش الحياة الواقعية.</li>
+      <li>5. ممنوع استغلال الثغرات: أي استغلال للأخطاء البرمجية يعرضك للعقوبة.</li>
+      <li>6. لا للعنصرية أو الإساءة: أي كلام مسيء أو عنصري ممنوع تمامًا.</li>
+      <li>7. التفاعل مطلوب: حافظ على التفاعل والمشاركة في السيناريوهات.</li>
+    </ul>
+  </section>
+
+  <section class="quiz">
+    <h2>اختبار القوانين</h2>
+    <form action="mailto:rraammeeaappokata@gmail.com" method="POST" enctype="text/plain">
+      <label for="name">الاسم:</label>
+      <input type="text" id="name" name="الاسم" required>
+
+      <label for="q1">هل مسموح بـ RDM؟</label>
+      <select id="q1" name="سؤال 1">
+        <option value="نعم">نعم</option>
+        <option value="لا">لا</option>
+      </select>
+
+      <label for="q2">هل يمكن دهس اللاعبين بدون سبب؟</label>
+      <select id="q2" name="سؤال 2">
+        <option value="نعم">نعم</option>
+        <option value="لا">لا</option>
+      </select>
+
+      <label for="q3">هل يجب التصرف حسب الواقع؟</label>
+      <select id="q3" name="سؤال 3">
+        <option value="نعم">نعم</option>
+        <option value="لا">لا</option>
+      </select>
+
+      <input type="submit" value="إرسال الإجابات">
+    </form>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 سيرفر الحياة الواقعية. جميع الحقوق محفوظة.</p>
+  </footer>
+</body>
+</html>
