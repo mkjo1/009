@@ -687,7 +687,9 @@
         }
 
         function socialLogin(provider) {
-            alert(`سيتم تسجيل الدخول عبر ${provider}\n(في التطبيق الحقيقي سيتم التكامل مع ${provider} API)`);
+            const providerName = provider === 'google' ? 'Google' : 'Discord';
+            alert(`⚠️ تسجيل الدخول عبر ${providerName} غير متاح حالياً\n\nلاستخدام هذه الميزة يجب:\n• إعداد OAuth API من ${providerName}\n• تكوين خادم Backend\n• الحصول على مفاتيح API\n\nالرجاء استخدام التسجيل بالبريد الإلكتروني`);
+            return false;
         }
 
         function showDashboard(user) {
