@@ -1,135 +1,982 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>سيرفر الحياة الواقعية</title>
-  <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #1e1e1e;
-      color: white;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background-color: #6200ea;
-      padding: 30px;
-      text-align: center;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2.5em;
-    }
-    .description {
-      padding: 20px;
-      text-align: center;
-      font-size: 1.2em;
-    }
-    .rules, .quiz {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #2e2e2e;
-      border-radius: 10px;
-    }
-    .rules h2, .quiz h2 {
-      text-align: center;
-      color: #ffcc00;
-    }
-    .rules ul {
-      list-style: none;
-      padding: 0;
-    }
-    .rules li {
-      background: #3a3a3a;
-      margin: 10px 0;
-      padding: 15px;
-      border-radius: 5px;
-    }
-    form {
-      display: flex;
-      flex-direction: column;
-    }
-    label {
-      margin: 10px 0 5px;
-    }
-    input[type="text"], input[type="email"], select {
-      padding: 10px;
-      border-radius: 5px;
-      border: none;
-    }
-    input[type="submit"] {
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #ffcc00;
-      color: #000;
-      font-weight: bold;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    footer {
-      text-align: center;
-      padding: 20px;
-      background-color: #111;
-      color: #aaa;
-    }
-  </style>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الدراسة</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a4d3f 0%, #0d2621 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .hexagon-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hexagon {
+            position: absolute;
+            width: 80px;
+            height: 46px;
+            background: rgba(41, 37, 36, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .hexagon:before,
+        .hexagon:after {
+            content: "";
+            position: absolute;
+            width: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+        }
+
+        .hexagon:before {
+            bottom: 100%;
+            border-bottom: 23px solid rgba(41, 37, 36, 0.3);
+            transition: border-bottom-color 0.3s ease;
+        }
+
+        .hexagon:after {
+            top: 100%;
+            border-top: 23px solid rgba(41, 37, 36, 0.3);
+            transition: border-top-color 0.3s ease;
+        }
+
+        .hexagon:hover {
+            background: rgba(34, 197, 94, 0.6);
+        }
+
+        .hexagon:hover:before {
+            border-bottom-color: rgba(34, 197, 94, 0.6);
+        }
+
+        .hexagon:hover:after {
+            border-top-color: rgba(34, 197, 94, 0.6);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a4d3f;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .google-btn {
+            background: #4285f4;
+            color: white;
+        }
+
+        .discord-btn {
+            background: #5865f2;
+            color: white;
+        }
+
+        .social-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            color: #666;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .toggle-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .toggle-text a {
+            color: #22c55e;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .toggle-text a:hover {
+            text-decoration: underline;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .time-left {
+            font-size: 24px;
+            font-weight: bold;
+            color: #22c55e;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #1a4d3f;
+            margin-bottom: 15px;
+        }
+
+        .plant-garden {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .plant {
+            text-align: center;
+            padding: 15px;
+            background: #f0fdf4;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .plant:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(34, 197, 94, 0.2);
+        }
+
+        .plant-icon {
+            font-size: 40px;
+            margin-bottom: 5px;
+        }
+
+        .plant-name {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .add-plant-btn {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .add-plant-btn:hover {
+            background: #16a34a;
+        }
+
+        .add-plant-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-item input[type="checkbox"] {
+            width: auto;
+        }
+
+        .add-task-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .add-task-input input {
+            flex: 1;
+        }
+
+        .add-task-input button {
+            padding: 10px 20px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .schedule-table th,
+        .schedule-table td {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .schedule-table th {
+            background: #f0fdf4;
+            color: #1a4d3f;
+            font-weight: bold;
+        }
+
+        .schedule-table input {
+            padding: 5px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .tokens-display {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .blocked-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
+
+        .blocked-screen h1 {
+            color: white;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .blocked-screen p {
+            font-size: 24px;
+        }
+
+        .save-schedule-btn {
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .verification-message {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            color: #92400e;
+            font-weight: bold;
+        }
+
+        .name-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>سيرفر الحياة الواقعية</h1>
-  </header>
+    <div class="hexagon-bg" id="hexagonBg"></div>
+    <div class="blocked-screen" id="blockedScreen">
+        <h1>⛔ محظور</h1>
+        <p>لم تكمل ساعات الدراسة المطلوبة</p>
+        <p id="blockTimer"></p>
+    </div>
 
-  <div class="description">
-    <p>مرحبًا بك في أفضل سيرفر حياة واقعية! تأكد من قراءة القوانين والالتزام بها.</p>
-  </div>
+    <div class="container">
+        <div class="auth-card" id="signupCard">
+            <h1>🌱 إنشاء حساب</h1>
+            
+            <div class="social-buttons">
+                <button class="social-btn google-btn" onclick="socialLogin('google')">
+                    <span>Google</span>
+                </button>
+                <button class="social-btn discord-btn" onclick="socialLogin('discord')">
+                    <span>Discord</span>
+                </button>
+            </div>
 
-  <section class="rules">
-    <h2>قوانين السيرفر</h2>
-    <ul>
-      <li>1. الاحترام أولاً: يجب احترام جميع اللاعبين والإداريين.</li>
-      <li>2. ممنوع RDM: القتل العشوائي بدون سبب ممنوع تمامًا.</li>
-      <li>3. ممنوع VDM: دهس اللاعبين بالسيارات بدون سبب غير مسموح.</li>
-      <li>4. التزام بـ Roleplay: لازم تتصرف داخل اللعبة كأنك تعيش الحياة الواقعية.</li>
-      <li>5. ممنوع استغلال الثغرات: أي استغلال للأخطاء البرمجية يعرضك للعقوبة.</li>
-      <li>6. لا للعنصرية أو الإساءة: أي كلام مسيء أو عنصري ممنوع تمامًا.</li>
-      <li>7. التفاعل مطلوب: حافظ على التفاعل والمشاركة في السيناريوهات.</li>
-    </ul>
-  </section>
+            <div class="divider">أو</div>
 
-  <section class="quiz">
-    <h2>اختبار القوانين</h2>
-    <form action="mailto:rraammeeaappokata@gmail.com" method="POST" enctype="text/plain">
-      <label for="name">الاسم:</label>
-      <input type="text" id="name" name="الاسم" required>
+            <form onsubmit="handleSignup(event)">
+                <div class="name-inputs">
+                    <div class="form-group">
+                        <label>الاسم الأول</label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>الاسم الثاني</label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>كلمة السر</label>
+                    <input type="password" id="signupPassword" required minlength="6">
+                </div>
+                <button type="submit" class="submit-btn">إنشاء حساب</button>
+            </form>
 
-      <label for="q1">هل مسموح بـ RDM؟</label>
-      <select id="q1" name="سؤال 1">
-        <option value="نعم">نعم</option>
-        <option value="لا">لا</option>
-      </select>
+            <div class="toggle-text">
+                لديك حساب؟ <a href="#" onclick="toggleAuth('login')">تسجيل الدخول</a>
+            </div>
+        </div>
 
-      <label for="q2">هل يمكن دهس اللاعبين بدون سبب؟</label>
-      <select id="q2" name="سؤال 2">
-        <option value="نعم">نعم</option>
-        <option value="لا">لا</option>
-      </select>
+        <div class="auth-card" id="loginCard" style="display: none;">
+            <h1>🔐 تسجيل الدخول</h1>
+            
+            <div class="social-buttons">
+                <button class="social-btn google-btn" onclick="socialLogin('google')">
+                    <span>Google</span>
+                </button>
+                <button class="social-btn discord-btn" onclick="socialLogin('discord')">
+                    <span>Discord</span>
+                </button>
+            </div>
 
-      <label for="q3">هل يجب التصرف حسب الواقع؟</label>
-      <select id="q3" name="سؤال 3">
-        <option value="نعم">نعم</option>
-        <option value="لا">لا</option>
-      </select>
+            <div class="divider">أو</div>
 
-      <input type="submit" value="إرسال الإجابات">
-    </form>
-  </section>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>كلمة السر</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="submit-btn">تسجيل الدخول</button>
+            </form>
 
-  <footer>
-    <p>&copy; 2025 سيرفر الحياة الواقعية. جميع الحقوق محفوظة.</p>
-  </footer>
+            <div class="toggle-text">
+                ليس لديك حساب؟ <a href="#" onclick="toggleAuth('signup')">إنشاء حساب</a>
+            </div>
+        </div>
+
+        <div class="dashboard" id="dashboard">
+            <div class="dashboard-header">
+                <div>
+                    <h2 style="color: #1a4d3f;">مرحباً، <span id="userName"></span></h2>
+                </div>
+                <div class="time-left" id="timeLeft"></div>
+                <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h2>🌿 حديقة النباتات</h2>
+                    <div class="tokens-display">
+                        💰 الرموز المتاحة: <span id="tokensCount">5</span>
+                    </div>
+                    <button class="add-plant-btn" onclick="addPlant()" id="addPlantBtn">
+                        إضافة نبات جديد
+                    </button>
+                    <div class="plant-garden" id="plantGarden"></div>
+                </div>
+
+                <div class="card">
+                    <h2>📝 قائمة المهام</h2>
+                    <ul class="task-list" id="taskList"></ul>
+                    <div class="add-task-input">
+                        <input type="text" id="newTask" placeholder="أضف مهمة جديدة...">
+                        <button onclick="addTask()">إضافة</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📅 جدول الدراسة الأسبوعي</h2>
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>اليوم</th>
+                                <th>المادة</th>
+                                <th>الوقت</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleTable">
+                            <tr><td>السبت</td><td><input type="text" data-day="saturday"></td><td><input type="time" data-day="saturday"></td></tr>
+                            <tr><td>الأحد</td><td><input type="text" data-day="sunday"></td><td><input type="time" data-day="sunday"></td></tr>
+                            <tr><td>الإثنين</td><td><input type="text" data-day="monday"></td><td><input type="time" data-day="monday"></td></tr>
+                            <tr><td>الثلاثاء</td><td><input type="text" data-day="tuesday"></td><td><input type="time" data-day="tuesday"></td></tr>
+                            <tr><td>الأربعاء</td><td><input type="text" data-day="wednesday"></td><td><input type="time" data-day="wednesday"></td></tr>
+                            <tr><td>الخميس</td><td><input type="text" data-day="thursday"></td><td><input type="time" data-day="thursday"></td></tr>
+                            <tr><td>الجمعة</td><td><input type="text" data-day="friday"></td><td><input type="time" data-day="friday"></td></tr>
+                        </tbody>
+                    </table>
+                    <button class="save-schedule-btn" onclick="saveSchedule()">حفظ الجدول</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const plantEmojis = ['🌱', '🌿', '🌾', '🌳', '🌲', '🌴', '🌵', '🌷', '🌹', '🌺', '🌻', '🌼'];
+        
+        let userData = {
+            tokens: 5,
+            plants: [],
+            tasks: [],
+            studyTime: 0,
+            dailyLimit: 5 * 60 * 60,
+            breakTime: 60 * 60,
+            lastLogin: null,
+            blocked: false,
+            blockEndTime: null
+        };
+
+        function createHexagons() {
+            const bg = document.getElementById('hexagonBg');
+            const rows = Math.ceil(window.innerHeight / 60);
+            const cols = Math.ceil(window.innerWidth / 90);
+            
+            for(let row = 0; row < rows; row++) {
+                for(let col = 0; col < cols; col++) {
+                    const hex = document.createElement('div');
+                    hex.className = 'hexagon';
+                    hex.style.left = (col * 90 + (row % 2) * 45) + 'px';
+                    hex.style.top = (row * 69) + 'px';
+                    bg.appendChild(hex);
+                }
+            }
+        }
+
+        function toggleAuth(mode) {
+            const signup = document.getElementById('signupCard');
+            const login = document.getElementById('loginCard');
+            
+            if(mode === 'login') {
+                signup.style.display = 'none';
+                login.style.display = 'block';
+            } else {
+                signup.style.display = 'block';
+                login.style.display = 'none';
+            }
+        }
+
+        function generateVerificationCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            
+            const verificationCode = generateVerificationCode();
+            
+            const user = {
+                firstName,
+                lastName,
+                email,
+                password,
+                verificationCode,
+                verified: false
+            };
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            users.push(user);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            alert(`تم إنشاء الحساب! تم إرسال رمز التحقق ${verificationCode} إلى ${email}\n(في التطبيق الحقيقي سيتم إرساله عبر البريد)`);
+            
+            toggleAuth('login');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if(user) {
+                checkBlockStatus();
+                if(!userData.blocked) {
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    loadUserData();
+                    showDashboard(user);
+                    startStudyTimer();
+                }
+            } else {
+                alert('البريد الإلكتروني أو كلمة السر غير صحيحة');
+            }
+        }
+
+        function socialLogin(provider) {
+            alert(`سيتم تسجيل الدخول عبر ${provider}\n(في التطبيق الحقيقي سيتم التكامل مع ${provider} API)`);
+        }
+
+        function showDashboard(user) {
+            document.getElementById('signupCard').style.display = 'none';
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userName').textContent = user.firstName + ' ' + user.lastName;
+            
+            updateTokensDisplay();
+            renderPlants();
+            renderTasks();
+            loadSchedule();
+        }
+
+        function checkBlockStatus() {
+            const saved = localStorage.getItem('userData');
+            if(saved) {
+                const data = JSON.parse(saved);
+                if(data.blocked && data.blockEndTime) {
+                    const now = Date.now();
+                    if(now < data.blockEndTime) {
+                        userData.blocked = true;
+                        userData.blockEndTime = data.blockEndTime;
+                        showBlockScreen();
+                    } else {
+                        userData.blocked = false;
+                        userData.blockEndTime = null;
+                        localStorage.setItem('userData', JSON.stringify(userData));
+                    }
+                }
+            }
+        }
+
+        function showBlockScreen() {
+            document.getElementById('blockedScreen').style.display = 'flex';
+            updateBlockTimer();
+            setInterval(updateBlockTimer, 1000);
+        }
+
+        function updateBlockTimer() {
+            const now = Date.now();
+            const remaining = userData.blockEndTime - now;
+            
+            if(remaining <= 0) {
+                location.reload();
+                return;
+            }
+            
+            const hours = Math.floor(remaining / (1000 * 60 * 60));
+            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+            
+            document.getElementById('blockTimer').textContent = 
+                `الوقت المتبقي: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startStudyTimer() {
+            setInterval(() => {
+                userData.studyTime++;
+                updateTimeDisplay();
+                
+                if(userData.studyTime >= userData.dailyLimit + userData.breakTime) {
+                    userData.studyTime = 0;
+                }
+                
+                if(userData.studyTime === userData.breakTime) {
+                    alert('حان وقت الراحة! استرح لمدة ساعة.');
+                }
+                
+                if(userData.studyTime >= userData.breakTime && userData.studyTime < userData.breakTime + 60) {
+                    if(userData.studyTime === userData.breakTime + 60) {
+                        userData.blocked = true;
+                        userData.blockEndTime = Date.now() + (3 * 60 * 60 * 1000);
+                        saveUserData();
+                        showBlockScreen();
+                    }
+                }
+                
+                if(userData.studyTime % 3600 === 0 && userData.studyTime > 0 && userData.studyTime <= userData.dailyLimit) {
+                    userData.tokens++;
+                    updateTokensDisplay();
+                    alert('🎉 لقد حصلت على رمز جديد!');
+                }
+                
+                saveUserData();
+            }, 1000);
+        }
+
+        function updateTimeDisplay() {
+            const remaining = Math.max(0, userData.dailyLimit - userData.studyTime);
+            const hours = Math.floor(remaining / 3600);
+            const minutes = Math.floor((remaining % 3600) / 60);
+            const seconds = remaining % 60;
+            
+            document.getElementById('timeLeft').textContent = 
+                `⏱️ ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function addPlant() {
+            if(userData.tokens > 0) {
+                const plant = {
+                    id: Date.now(),
+                    emoji: plantEmojis[Math.floor(Math.random() * plantEmojis.length)],
+                    name: 'نبات ' + (userData.plants.length + 1),
+                    growth: 0,
+                    startTime: Date.now()
+                };
+                
+                userData.plants.push(plant);
+                userData.tokens--;
+                updateTokensDisplay();
+                renderPlants();
+                saveUserData();
+                
+                growPlant(plant.id);
+            } else {
+                alert('ليس لديك رموز كافية! ادرس لمدة ساعة للحصول على رمز.');
+            }
+        }
+
+        function growPlant(plantId) {
+            setInterval(() => {
+                const plant = userData.plants.find(p => p.id === plantId);
+                if(plant && plant.growth < 100) {
+                    plant.growth += 0.5;
+                    renderPlants();
+                    saveUserData();
+                }
+            }, 30000);
+        }
+
+        function renderPlants() {
+            const garden = document.getElementById('plantGarden');
+            garden.innerHTML = '';
+            
+            userData.plants.forEach(plant => {
+                const div = document.createElement('div');
+                div.className = 'plant';
+                div.innerHTML = `
+                    <div class="plant-icon" style="opacity: ${plant.growth / 100}">${plant.emoji}</div>
+                    <div class="plant-name">${plant.name}</div>
+                    <div class="plant-name">${Math.floor(plant.growth)}%</div>
+                `;
+                garden.appendChild(div);
+                
+                if(plant.growth === 0) {
+                    growPlant(plant.id);
+                }
+            });
+        }
+
+        function updateTokensDisplay() {
+            document.getElementById('tokensCount').textContent = userData.tokens;
+            document.getElementById('addPlantBtn').disabled = userData.tokens === 0;
+        }
+
+        function addTask() {
+            const input = document.getElementById('newTask');
+            if(input.value.trim()) {
+                const task = {
+                    id: Date.now(),
+                    text: input.value,
+                    done: false
+                };
+                userData.tasks.push(task);
+                input.value = '';
+                renderTasks();
+                saveUserData();
+            }
+        }
+
+        function toggleTask(id) {
+            const task = userData.tasks.find(t => t.id === id);
+            if(task) {
+                task.done = !task.done;
+                renderTasks();
+                saveUserData();
+            }
+        }
+
+        function deleteTask(id) {
+            userData.tasks = userData.tasks.filter(t => t.id !== id);
+            renderTasks();
+            saveUserData();
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+            
+            userData.tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                li.innerHTML = `
+                    <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${task.id})">
+                    <span style="flex: 1; text-decoration: ${task.done ? 'line-through' : 'none'}">${task.text}</span>
+                    <button onclick="deleteTask(${task.id})" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">حذف</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function saveSchedule() {
+            const inputs = document.querySelectorAll('#scheduleTable input');
+            const schedule = {};
+            
+            inputs.forEach(input => {
+                const day = input.dataset.day;
+                if(!schedule[day]) schedule[day] = {};
+                
+                if(input.type === 'text') {
+                    schedule[day].subject = input.value;
+                } else if(input.type === 'time') {
+                    schedule[day].time = input.value;
+                }
+            });
+            
+            localStorage.setItem('schedule', JSON.stringify(schedule));
+            alert('✅ تم حفظ الجدول بنجاح!');
+            
+            checkWeeklySchedule();
+        }
+
+        function loadSchedule() {
+            const schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
+            const inputs = document.querySelectorAll('#scheduleTable input');
+            
+            inputs.forEach(input => {
+                const day = input.dataset.day;
+                if(schedule[day]) {
+                    if(input.type === 'text') {
+                        input.value = schedule[day].subject || '';
+                    } else if(input.type === 'time') {
+                        input.value = schedule[day].time || '';
+                    }
+                }
+            });
+        }
+
+        function checkWeeklySchedule() {
+            const lastCheck = localStorage.getItem('lastScheduleCheck');
+            const now = Date.now();
+            const oneWeek = 7 * 24 * 60 * 60 * 1000;
+            
+            if(!lastCheck || (now - parseInt(lastCheck)) > oneWeek) {
+                alert('📧 تذكير: يجب كتابة جدول الدراسة الأسبوعي!\n(في التطبيق الحقيقي سيتم إرسال تذكير عبر البريد)');
+                localStorage.setItem('lastScheduleCheck', now.toString());
+            }
+        }
+
+        function saveUserData() {
+            localStorage.setItem('userData', JSON.stringify(userData));
+        }
+
+        function loadUserData() {
+            const saved = localStorage.getItem('userData');
+            if(saved) {
+                const data = JSON.parse(saved);
+                userData = {...userData, ...data};
+            }
+        }
+
+        function logout() {
+            if(confirm('هل تريد تسجيل الخروج؟')) {
+                localStorage.removeItem('currentUser');
+                location.reload();
+            }
+        }
+
+        window.addEventListener('load', () => {
+            createHexagons();
+            
+            const currentUser = localStorage.getItem('currentUser');
+            if(currentUser) {
+                const user = JSON.parse(currentUser);
+                loadUserData();
+                checkBlockStatus();
+                if(!userData.blocked) {
+                    showDashboard(user);
+                    startStudyTimer();
+                    checkWeeklySchedule();
+                }
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            document.getElementById('hexagonBg').innerHTML = '';
+            createHexagons();
+        });
+    </script>
 </body>
 </html>
