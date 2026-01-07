@@ -1,53 +1,78 @@
-from flask import Flask, render_template_string, request, jsonify, session, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
-import secrets
-import random
+// منصة الدراسة - Node.js + Express + SQLite
+// app.js
 
-app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///study.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+const express = require('express');
+const session = require('express-session');
+const bcrypt = require('bcrypt');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(100))
-    last_name = db.Column(db.String(100))
-    email = db.Column(db.String(120), unique=True)
-    password_hash = db.Column(db.String(200))
-    plants = db.relationship('Plant', backref='owner', lazy=True)
-    tasks = db.relationship('Task', backref='owner', lazy=True)
-    study = db.relationship('Study', backref='user', uselist=False)
+const app = express();
+const PORT = 5000;
 
-class Plant(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    emoji = db.Column(db.String(10))
-    name = db.Column(db.String(50))
-    growth = db.Column(db.Float, default=0)
-    created = db.Column(db.DateTime, default=datetime.utcnow)
+// إعداد قاعدة البيانات
+const db = new sqlite3.Database('./study.db', (err) => {
+    if (err) console.error(err);
+    else console.log('✅ قاعدة البيانات جاهزة');
+});
 
-class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    text = db.Column(db.String(500))
-    done = db.Column(db.Boolean, default=False)
+// إنشاء الجداول
+db.serialize(() => {
+    db.run(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        first_name TEXT,
+        last_name TEXT,
+        email TEXT UNIQUE,
+        password TEXT
+    )`);
+    
+    db.run(`CREATE TABLE IF NOT EXISTS plants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        emoji TEXT,
+        name TEXT,
+        growth REAL DEFAULT 0,
+        created DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )`);
+    
+    db.run(`CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        text TEXT,
+        done INTEGER DEFAULT 0,
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )`);
+    
+    db.run(`CREATE TABLE IF NOT EXISTS study (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER UNIQUE,
+        tokens INTEGER DEFAULT 5,
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )`);
+    
+    db.run(`CREATE TABLE IF NOT EXISTS schedule (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        day TEXT,
+        subject TEXT,
+        time TEXT,
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )`);
+});
 
-class Study(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True)
-    tokens = db.Column(db.Integer, default=5)
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+    secret: 'study-platform-secret-key-2024',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 }
+}));
 
-class Schedule(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    day = db.Column(db.String(20))
-    subject = db.Column(db.String(100))
-    time = db.Column(db.String(10))
-
-HTML = '''<!DOCTYPE html>
+// HTML Template
+const HTML = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -116,74 +141,8 @@ input:focus{outline:none;border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,9
 </head>
 <body>
 <div class="hex-bg" id="hexBg"></div>
-<div class="container {% if session.get('user_id') %}wide{% endif %}">
-{% if not session.get('user_id') %}
-<div class="card" style="display:{% if mode=='signup' %}block{% else %}none{% endif %}">
-<h1>🌱 إنشاء حساب</h1>
-{% if error %}<div class="error">{{error}}</div>{% endif %}
-<form method="POST" action="/signup">
-<div class="name-grid">
-<div class="form-group"><label>الاسم الأول</label><input type="text" name="first_name" required></div>
-<div class="form-group"><label>الاسم الثاني</label><input type="text" name="last_name" required></div>
-</div>
-<div class="form-group"><label>البريد</label><input type="email" name="email" required></div>
-<div class="form-group"><label>كلمة السر</label><input type="password" name="password" required></div>
-<button type="submit" class="btn">إنشاء حساب</button>
-</form>
-<div class="toggle">لديك حساب؟ <a href="/?mode=login">تسجيل الدخول</a></div>
-</div>
-<div class="card" style="display:{% if mode=='login' %}block{% else %}none{% endif %}">
-<h1>🔐 تسجيل الدخول</h1>
-{% if error %}<div class="error">{{error}}</div>{% endif %}
-{% if success %}<div class="success">{{success}}</div>{% endif %}
-<form method="POST" action="/login">
-<div class="form-group"><label>البريد</label><input type="email" name="email" required></div>
-<div class="form-group"><label>كلمة السر</label><input type="password" name="password" required></div>
-<button type="submit" class="btn">دخول</button>
-</form>
-<div class="toggle">ليس لديك حساب؟ <a href="/?mode=signup">إنشاء حساب</a></div>
-</div>
-{% else %}
-<div class="dashboard" style="display:block">
-<div class="header">
-<h2 style="margin:0">مرحباً {{user.first_name}} {{user.last_name}} 👋</h2>
-<div class="time">⏱️ 5:00:00</div>
-<form method="POST" action="/logout" style="margin:0"><button class="logout">خروج</button></form>
-</div>
-<div class="grid">
-<div class="box">
-<h2>🌿 حديقة النباتات</h2>
-<div class="tokens">💰 الرموز: <span id="tokens">{{study.tokens}}</span></div>
-<button class="add-btn" onclick="addPlant()" id="addBtn">➕ نبات جديد</button>
-<div class="plants" id="plants"><div class="empty"><div class="empty-icon">🌱</div><p>أضف نبات!</p></div></div>
-</div>
-<div class="box">
-<h2>📝 المهام</h2>
-<ul class="tasks" id="tasks"><div class="empty"><div class="empty-icon">✅</div><p>أضف مهمة!</p></div></ul>
-<div class="task-input">
-<input type="text" id="newTask" placeholder="مهمة جديدة">
-<button onclick="addTask()">إضافة</button>
-</div>
-</div>
-<div class="box">
-<h2>📅 الجدول</h2>
-<table class="table">
-<thead><tr><th>اليوم</th><th>المادة</th><th>الوقت</th></tr></thead>
-<tbody id="schedule">
-<tr><td>السبت</td><td><input type="text" data-day="sat"></td><td><input type="time" data-day="sat"></td></tr>
-<tr><td>الأحد</td><td><input type="text" data-day="sun"></td><td><input type="time" data-day="sun"></td></tr>
-<tr><td>الإثنين</td><td><input type="text" data-day="mon"></td><td><input type="time" data-day="mon"></td></tr>
-<tr><td>الثلاثاء</td><td><input type="text" data-day="tue"></td><td><input type="time" data-day="tue"></td></tr>
-<tr><td>الأربعاء</td><td><input type="text" data-day="wed"></td><td><input type="time" data-day="wed"></td></tr>
-<tr><td>الخميس</td><td><input type="text" data-day="thu"></td><td><input type="time" data-day="thu"></td></tr>
-<tr><td>الجمعة</td><td><input type="text" data-day="fri"></td><td><input type="time" data-day="fri"></td></tr>
-</tbody>
-</table>
-<button class="save-btn" onclick="saveSch()">💾 حفظ</button>
-</div>
-</div>
-</div>
-{% endif %}
+<div class="container {{WIDE}}">
+{{CONTENT}}
 </div>
 <script>
 function makeHex(){
@@ -212,7 +171,7 @@ g.innerHTML='';
 p.forEach(pl=>{
 const d=document.createElement('div');
 d.className='plant';
-d.innerHTML=`<div class="plant-icon" style="opacity:${Math.min(pl.growth/100,1)}">${pl.emoji}</div><div class="plant-name">${pl.name}</div><div class="plant-name">${Math.floor(pl.growth)}%</div>`;
+d.innerHTML='<div class="plant-icon" style="opacity:'+Math.min(pl.growth/100,1)+'">'+pl.emoji+'</div><div class="plant-name">'+pl.name+'</div><div class="plant-name">'+Math.floor(pl.growth)+'%</div>';
 g.appendChild(d);
 });
 }catch(e){console.error(e)}}
@@ -239,7 +198,7 @@ l.innerHTML='';
 t.forEach(tk=>{
 const li=document.createElement('li');
 li.className='task';
-li.innerHTML=`<input type="checkbox" ${tk.done?'checked':''} onchange="toggleTask(${tk.id})"><span style="flex:1;text-decoration:${tk.done?'line-through':'none'}">${tk.text}</span><button onclick="delTask(${tk.id})" class="del-btn">حذف</button>`;
+li.innerHTML='<input type="checkbox" '+(tk.done?'checked':'')+' onchange="toggleTask('+tk.id+')"><span style="flex:1;text-decoration:'+(tk.done?'line-through':'none')+'">'+tk.text+'</span><button onclick="delTask('+tk.id+')" class="del-btn">حذف</button>';
 l.appendChild(li);
 });
 }catch(e){console.error(e)}}
@@ -254,13 +213,13 @@ await loadTasks();
 }catch(e){console.error(e)}}
 async function toggleTask(id){
 try{
-await fetch(`/api/tasks/${id}/toggle`,{method:'POST'});
+await fetch('/api/tasks/'+id+'/toggle',{method:'POST'});
 await loadTasks();
 }catch(e){console.error(e)}}
 async function delTask(id){
 if(!confirm('حذف؟'))return;
 try{
-await fetch(`/api/tasks/${id}`,{method:'DELETE'});
+await fetch('/api/tasks/'+id,{method:'DELETE'});
 await loadTasks();
 }catch(e){console.error(e)}}
 async function saveSch(){
@@ -290,7 +249,7 @@ else if(i.type==='time')i.value=sch[d].time||'';
 }catch(e){console.error(e)}}
 window.addEventListener('load',()=>{
 makeHex();
-const logged={{'true' if session.get('user_id') else 'false'}};
+const logged={{LOGGED}};
 if(logged){
 loadPlants();
 loadTasks();
@@ -305,148 +264,262 @@ if(inp)inp.addEventListener('keypress',e=>{if(e.key==='Enter')addTask()});
 });
 </script>
 </body>
-</html>'''
+</html>`;
 
-@app.route('/')
-def index():
-    mode=request.args.get('mode','signup')
-    user=None
-    study=None
-    if 'user_id' in session:
-        user=User.query.get(session['user_id'])
-        study=Study.query.filter_by(user_id=user.id).first()
-        if not study:
-            study=Study(user_id=user.id)
-            db.session.add(study)
-            db.session.commit()
-    return render_template_string(HTML,mode=mode,user=user,study=study,session=session)
+const AUTH_SIGNUP = `
+<div class="card">
+<h1>🌱 إنشاء حساب</h1>
+{{ERROR}}
+<form method="POST" action="/signup">
+<div class="name-grid">
+<div class="form-group"><label>الاسم الأول</label><input type="text" name="first_name" required></div>
+<div class="form-group"><label>الاسم الثاني</label><input type="text" name="last_name" required></div>
+</div>
+<div class="form-group"><label>البريد</label><input type="email" name="email" required></div>
+<div class="form-group"><label>كلمة السر</label><input type="password" name="password" required></div>
+<button type="submit" class="btn">إنشاء حساب</button>
+</form>
+<div class="toggle">لديك حساب؟ <a href="/?mode=login">تسجيل الدخول</a></div>
+</div>`;
 
-@app.route('/signup',methods=['POST'])
-def signup():
-    fn=request.form.get('first_name')
-    ln=request.form.get('last_name')
-    em=request.form.get('email')
-    pw=request.form.get('password')
-    if User.query.filter_by(email=em).first():
-        return render_template_string(HTML,mode='signup',error='البريد مستخدم',session=session)
-    code=str(random.randint(100000,999999))
-    user=User(first_name=fn,last_name=ln,email=em,password_hash=generate_password_hash(pw))
-    db.session.add(user)
-    db.session.commit()
-    study=Study(user_id=user.id)
-    db.session.add(study)
-    db.session.commit()
-    print(f"\n✅ حساب جديد: {em} - كود: {code}\n")
-    return render_template_string(HTML,mode='login',success=f'تم! كود: {code}',session=session)
+const AUTH_LOGIN = `
+<div class="card">
+<h1>🔐 تسجيل الدخول</h1>
+{{ERROR}}{{SUCCESS}}
+<form method="POST" action="/login">
+<div class="form-group"><label>البريد</label><input type="email" name="email" required></div>
+<div class="form-group"><label>كلمة السر</label><input type="password" name="password" required></div>
+<button type="submit" class="btn">دخول</button>
+</form>
+<div class="toggle">ليس لديك حساب؟ <a href="/?mode=signup">إنشاء حساب</a></div>
+</div>`;
 
-@app.route('/login',methods=['POST'])
-def login():
-    em=request.form.get('email')
-    pw=request.form.get('password')
-    user=User.query.filter_by(email=em).first()
-    if user and check_password_hash(user.password_hash,pw):
-        session['user_id']=user.id
-        return redirect(url_for('index'))
-    return render_template_string(HTML,mode='login',error='خطأ في الدخول',session=session)
+const DASHBOARD = `
+<div class="dashboard" style="display:block">
+<div class="header">
+<h2 style="margin:0">مرحباً {{NAME}} 👋</h2>
+<div class="time">⏱️ 5:00:00</div>
+<form method="POST" action="/logout" style="margin:0"><button class="logout">خروج</button></form>
+</div>
+<div class="grid">
+<div class="box">
+<h2>🌿 حديقة النباتات</h2>
+<div class="tokens">💰 الرموز: <span id="tokens">{{TOKENS}}</span></div>
+<button class="add-btn" onclick="addPlant()" id="addBtn">➕ نبات جديد</button>
+<div class="plants" id="plants"><div class="empty"><div class="empty-icon">🌱</div><p>أضف نبات!</p></div></div>
+</div>
+<div class="box">
+<h2>📝 المهام</h2>
+<ul class="tasks" id="tasks"><div class="empty"><div class="empty-icon">✅</div><p>أضف مهمة!</p></div></ul>
+<div class="task-input">
+<input type="text" id="newTask" placeholder="مهمة جديدة">
+<button onclick="addTask()">إضافة</button>
+</div>
+</div>
+<div class="box">
+<h2>📅 الجدول</h2>
+<table class="table">
+<thead><tr><th>اليوم</th><th>المادة</th><th>الوقت</th></tr></thead>
+<tbody id="schedule">
+<tr><td>السبت</td><td><input type="text" data-day="sat"></td><td><input type="time" data-day="sat"></td></tr>
+<tr><td>الأحد</td><td><input type="text" data-day="sun"></td><td><input type="time" data-day="sun"></td></tr>
+<tr><td>الإثنين</td><td><input type="text" data-day="mon"></td><td><input type="time" data-day="mon"></td></tr>
+<tr><td>الثلاثاء</td><td><input type="text" data-day="tue"></td><td><input type="time" data-day="tue"></td></tr>
+<tr><td>الأربعاء</td><td><input type="text" data-day="wed"></td><td><input type="time" data-day="wed"></td></tr>
+<tr><td>الخميس</td><td><input type="text" data-day="thu"></td><td><input type="time" data-day="thu"></td></tr>
+<tr><td>الجمعة</td><td><input type="text" data-day="fri"></td><td><input type="time" data-day="fri"></td></tr>
+</tbody>
+</table>
+<button class="save-btn" onclick="saveSch()">💾 حفظ</button>
+</div>
+</div>
+</div>`;
 
-@app.route('/logout',methods=['POST'])
-def logout():
-    session.pop('user_id',None)
-    return redirect(url_for('index'))
+// Routes
+app.get('/', (req, res) => {
+    const mode = req.query.mode || 'signup';
+    
+    if (req.session.userId) {
+        db.get('SELECT * FROM users WHERE id = ?', [req.session.userId], (err, user) => {
+            if (err || !user) return res.redirect('/logout');
+            
+            db.get('SELECT * FROM study WHERE user_id = ?', [user.id], (err, study) => {
+                if (!study) {
+                    db.run('INSERT INTO study (user_id) VALUES (?)', [user.id], function() {
+                        study = { tokens: 5 };
+                        sendDashboard(res, user, study);
+                    });
+                } else {
+                    sendDashboard(res, user, study);
+                }
+            });
+        });
+    } else {
+        const content = mode === 'login' ? AUTH_LOGIN : AUTH_SIGNUP;
+        const html = HTML.replace('{{CONTENT}}', content)
+            .replace('{{ERROR}}', '')
+            .replace('{{SUCCESS}}', '')
+            .replace('{{WIDE}}', '')
+            .replace('{{LOGGED}}', 'false');
+        res.send(html);
+    }
+});
 
-@app.route('/api/plants',methods=['GET'])
-def get_plants():
-    if 'user_id' not in session:
-        return jsonify([])
-    plants=Plant.query.filter_by(user_id=session['user_id']).all()
-    for p in plants:
-        elapsed=(datetime.utcnow()-p.created).total_seconds()
-        growth=(elapsed/60)*2
-        p.growth=min(100,p.growth+growth)
-    db.session.commit()
-    return jsonify([{'id':p.id,'emoji':p.emoji,'name':p.name,'growth':round(p.growth,1)}for p in plants])
+function sendDashboard(res, user, study) {
+    const content = DASHBOARD
+        .replace('{{NAME}}', user.first_name + ' ' + user.last_name)
+        .replace('{{TOKENS}}', study.tokens);
+    const html = HTML.replace('{{CONTENT}}', content)
+        .replace('{{WIDE}}', 'wide')
+        .replace('{{LOGGED}}', 'true');
+    res.send(html);
+}
 
-@app.route('/api/plants',methods=['POST'])
-def add_plant():
-    if 'user_id' not in session:
-        return jsonify({'success':False,'message':'غير مسجل'})
-    study=Study.query.filter_by(user_id=session['user_id']).first()
-    if study.tokens<=0:
-        return jsonify({'success':False,'message':'لا توجد رموز'})
-    emojis=['🌱','🌿','🌾','🌳','🌲','🌴','🌵','🌷','🌹','🌺','🌻','🌼','🪴','🍀']
-    count=Plant.query.filter_by(user_id=session['user_id']).count()
-    plant=Plant(user_id=session['user_id'],emoji=random.choice(emojis),name=f'نبات {count+1}',growth=0)
-    study.tokens-=1
-    db.session.add(plant)
-    db.session.commit()
-    return jsonify({'success':True,'tokens':study.tokens})
+app.post('/signup', async (req, res) => {
+    const { first_name, last_name, email, password } = req.body;
+    
+    db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
+        if (user) {
+            const content = AUTH_SIGNUP.replace('{{ERROR}}', '<div class="error">البريد مستخدم</div>');
+            const html = HTML.replace('{{CONTENT}}', content).replace('{{WIDE}}', '').replace('{{LOGGED}}', 'false');
+            return res.send(html);
+        }
+        
+        const hash = await bcrypt.hash(password, 10);
+        const code = Math.floor(100000 + Math.random() * 900000);
+        
+        db.run('INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)',
+            [first_name, last_name, email, hash], function() {
+                db.run('INSERT INTO study (user_id) VALUES (?)', [this.lastID]);
+                console.log(`\n✅ حساب جديد: ${email} - كود: ${code}\n`);
+                
+                const content = AUTH_LOGIN
+                    .replace('{{ERROR}}', '')
+                    .replace('{{SUCCESS}}', `<div class="success">تم! كود: ${code}</div>`);
+                const html = HTML.replace('{{CONTENT}}', content).replace('{{WIDE}}', '').replace('{{LOGGED}}', 'false');
+                res.send(html);
+            });
+    });
+});
 
-@app.route('/api/tasks',methods=['GET'])
-def get_tasks():
-    if 'user_id' not in session:
-        return jsonify([])
-    tasks=Task.query.filter_by(user_id=session['user_id']).all()
-    return jsonify([{'id':t.id,'text':t.text,'done':t.done}for t in tasks])
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    
+    db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            const content = AUTH_LOGIN
+                .replace('{{ERROR}}', '<div class="error">خطأ في الدخول</div>')
+                .replace('{{SUCCESS}}', '');
+            const html = HTML.replace('{{CONTENT}}', content).replace('{{WIDE}}', '').replace('{{LOGGED}}', 'false');
+            return res.send(html);
+        }
+        
+        req.session.userId = user.id;
+        res.redirect('/');
+    });
+});
 
-@app.route('/api/tasks',methods=['POST'])
-def add_task():
-    if 'user_id' not in session:
-        return jsonify({'success':False})
-    data=request.json
-    task=Task(user_id=session['user_id'],text=data['text'])
-    db.session.add(task)
-    db.session.commit()
-    return jsonify({'success':True})
+app.post('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/');
+});
 
-@app.route('/api/tasks/<int:tid>/toggle',methods=['POST'])
-def toggle_task(tid):
-    task=Task.query.get(tid)
-    if task and task.user_id==session.get('user_id'):
-        task.done=not task.done
-        db.session.commit()
-    return jsonify({'success':True})
+// API Routes
+app.get('/api/plants', (req, res) => {
+    if (!req.session.userId) return res.json([]);
+    
+    db.all('SELECT * FROM plants WHERE user_id = ?', [req.session.userId], (err, plants) => {
+        plants = plants.map(p => {
+            const elapsed = (Date.now() - new Date(p.created).getTime()) / 1000;
+            const growth = Math.min(100, p.growth + (elapsed / 60) * 2);
+            db.run('UPDATE plants SET growth = ? WHERE id = ?', [growth, p.id]);
+            return { ...p, growth: Math.round(growth * 10) / 10 };
+        });
+        res.json(plants);
+    });
+});
 
-@app.route('/api/tasks/<int:tid>',methods=['DELETE'])
-def delete_task(tid):
-    task=Task.query.get(tid)
-    if task and task.user_id==session.get('user_id'):
-        db.session.delete(task)
-        db.session.commit()
-    return jsonify({'success':True})
+app.post('/api/plants', (req, res) => {
+    if (!req.session.userId) return res.json({ success: false });
+    
+    db.get('SELECT * FROM study WHERE user_id = ?', [req.session.userId], (err, study) => {
+        if (study.tokens <= 0) return res.json({ success: false, message: 'لا توجد رموز' });
+        
+        const emojis = ['🌱','🌿','🌾','🌳','🌲','🌴','🌵','🌷','🌹','🌺','🌻','🌼','🪴','🍀'];
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        
+        db.get('SELECT COUNT(*) as count FROM plants WHERE user_id = ?', [req.session.userId], (err, result) => {
+            const name = `نبات ${result.count + 1}`;
+            
+            db.run('INSERT INTO plants (user_id, emoji, name) VALUES (?, ?, ?)',
+                [req.session.userId, emoji, name], function() {
+                    db.run('UPDATE study SET tokens = tokens - 1 WHERE user_id = ?', [req.session.userId]);
+                    res.json({ success: true, tokens: study.tokens - 1 });
+                });
+        });
+    });
+});
 
-@app.route('/api/schedule',methods=['GET'])
-def get_schedule():
-    if 'user_id' not in session:
-        return jsonify({})
-    schedules=Schedule.query.filter_by(user_id=session['user_id']).all()
-    result={}
-    for s in schedules:
-        result[s.day]={'subject':s.subject or '','time':s.time or ''}
-    return jsonify(result)
+app.get('/api/tasks', (req, res) => {
+    if (!req.session.userId) return res.json([]);
+    db.all('SELECT * FROM tasks WHERE user_id = ?', [req.session.userId], (err, tasks) => {
+        res.json(tasks.map(t => ({ ...t, done: Boolean(t.done) })));
+    });
+});
 
-@app.route('/api/schedule',methods=['POST'])
-def save_schedule():
-    if 'user_id' not in session:
-        return jsonify({'success':False})
-    data=request.json
-    Schedule.query.filter_by(user_id=session['user_id']).delete()
-    for day,info in data.items():
-        if info.get('subject')or info.get('time'):
-            schedule=Schedule(user_id=session['user_id'],day=day,subject=info.get('subject',''),time=info.get('time',''))
-            db.session.add(schedule)
-    db.session.commit()
-    return jsonify({'success':True})
+app.post('/api/tasks', (req, res) => {
+    if (!req.session.userId) return res.json({ success: false });
+    db.run('INSERT INTO tasks (user_id, text) VALUES (?, ?)', [req.session.userId, req.body.text], () => {
+        res.json({ success: true });
+    });
+});
 
-with app.app_context():
-    db.create_all()
-    print("\n✅ قاعدة البيانات جاهزة\n")
+app.post('/api/tasks/:id/toggle', (req, res) => {
+    db.run('UPDATE tasks SET done = NOT done WHERE id = ? AND user_id = ?',
+        [req.params.id, req.session.userId], () => {
+            res.json({ success: true });
+        });
+});
 
-if __name__=='__main__':
-    print("="*60)
-    print("🌱 منصة الدراسة")
-    print("="*60)
-    print("\n1. تثبيت: pip install flask flask-sqlalchemy")
-    print("2. تشغيل: python app.py")
-    print("3. فتح: http://127.0.0.1:5000\n")
-    print("="*60+"\n")
-    app.run(debug=True,host='0.0.0.0',port=5000)
+app.delete('/api/tasks/:id', (req, res) => {
+    db.run('DELETE FROM tasks WHERE id = ? AND user_id = ?', [req.params.id, req.session.userId], () => {
+        res.json({ success: true });
+    });
+});
+
+app.get('/api/schedule', (req, res) => {
+    if (!req.session.userId) return res.json({});
+    db.all('SELECT * FROM schedule WHERE user_id = ?', [req.session.userId], (err, schedules) => {
+        const result = {};
+        schedules.forEach(s => {
+            result[s.day] = { subject: s.subject || '', time: s.time || '' };
+        });
+        res.json(result);
+    });
+});
+
+app.post('/api/schedule', (req, res) => {
+    if (!req.session.userId) return res.json({ success: false });
+    
+    db.run('DELETE FROM schedule WHERE user_id = ?', [req.session.userId], () => {
+        const data = req.body;
+        for (const [day, info] of Object.entries(data)) {
+            if (info.subject || info.time) {
+                db.run('INSERT INTO schedule (user_id, day, subject, time) VALUES (?, ?, ?, ?)',
+                    [req.session.userId, day, info.subject || '', info.time || '']);
+            }
+        }
+        res.json({ success: true });
+    });
+});
+
+// Start Server
+app.listen(PORT, () => {
+    console.log('\n' + '='.repeat(60));
+    console.log('🌱 منصة الدراسة - Node.js');
+    console.log('='.repeat(60));
+    console.log('\n1. تثبيت: npm install express express-session bcrypt sqlite3');
+    console.log('2. تشغيل: node app.js');
+    console.log(`3. فتح: http://localhost:${PORT}`);
+    console.log('\n' + '='.repeat(60) + '\n');
+});
